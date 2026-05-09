@@ -1,0 +1,14 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth';
+import { ecommerceController } from '../controllers/ecommerce.controller';
+const r = Router();
+r.use(requireAuth);
+r.get('/stats', ecommerceController.getStats);
+r.get('/products', ecommerceController.listProducts);
+r.post('/products', ecommerceController.createProduct);
+r.put('/products/:id', ecommerceController.updateProduct);
+r.delete('/products/:id', ecommerceController.deleteProduct);
+r.get('/orders', ecommerceController.listOrders);
+r.post('/orders', ecommerceController.createOrder);
+r.patch('/orders/:id/status', ecommerceController.updateOrderStatus);
+export default r;

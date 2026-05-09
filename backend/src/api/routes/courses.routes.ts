@@ -1,0 +1,15 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth';
+import { coursesController } from '../controllers/courses.controller';
+const r = Router();
+r.use(requireAuth);
+r.get('/', coursesController.list);
+r.post('/', coursesController.create);
+r.get('/:id', coursesController.get);
+r.put('/:id', coursesController.update);
+r.delete('/:id', coursesController.delete);
+r.post('/:id/enroll', coursesController.enroll);
+r.post('/:id/lessons', coursesController.addLesson);
+r.put('/:id/lessons/:lessonId', coursesController.updateLesson);
+r.delete('/:id/lessons/:lessonId', coursesController.deleteLesson);
+export default r;

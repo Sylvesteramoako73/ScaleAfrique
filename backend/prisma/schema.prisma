@@ -1,0 +1,740 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(uuid())
+  email            String    @unique
+  password         String?
+  name             String
+  role             String    @default("MEMBER")
+  avatar           String?
+  isVerified       Boolean   @default(false)
+  verifyToken      String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  googleId         String?   @unique
+  lastLogin        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  startupProfile  StartupProfile?
+  campaigns       Campaign[]
+  analytics       Analytics[]
+  aiConversations AIConversation[]
+  communityPosts  CommunityPost[]
+  comments        Comment[]
+  organizedEvents Event[]         @relation("EventOrganizer")
+  notifications   Notification[]
+  resources       Resource[]
+  automations     Automation[]
+
+  workspacesOwned       Workspace[]       @relation("WorkspaceOwner")
+  workspaceMemberships  WorkspaceMember[]
+  subscription          Subscription?
+  contacts              Contact[]
+  leads                 Lead[]
+  deals                 Deal[]
+  pipelines             Pipeline[]
+  activities            Activity[]
+
+  @@index([email])
+}
+
+model StartupProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  companyName    String
+  industry       String
+  growthStage    String   @default("IDEA")
+  region         String?
+  country        String?
+  website        String?
+  description    String?
+  teamSize       Int?
+  monthlyBudget  Float?
+  targetAudience String?
+  languages      String[]
+  logoUrl        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Campaign {
+  id          String    @id @default(uuid())
+  userId      String
+  name        String
+  type        String    @default("EMAIL")
+  status      String    @default("DRAFT")
+  channels    String[]
+  budget      Float?
+  startDate   DateTime?
+  endDate     DateTime?
+  targeting   String?
+  content     String?
+  metrics     String?
+  objective   String?
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailCampaigns EmailCampaign[]
+  socialPosts    SocialPost[]
+  analytics      Analytics[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model EmailCampaign {
+  id            String    @id @default(uuid())
+  campaignId    String
+  subject       String
+  body          String
+  recipientList String[]
+  scheduledAt   DateTime?
+  sentAt        DateTime?
+  openRate      Float?
+  clickRate     Float?
+  bounceRate    Float?
+  totalSent     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+}
+
+model SocialPost {
+  id          String    @id @default(uuid())
+  campaignId  String
+  platform    String
+  content     String
+  mediaUrls   String[]
+  scheduledAt DateTime?
+  postedAt    DateTime?
+  impressions Int?
+  engagement  Int?
+  reaches     Int?
+  likes       Int?
+  shares      Int?
+  postId      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+}
+
+model Analytics {
+  id          String   @id @default(uuid())
+  userId      String
+  campaignId  String?
+  date        DateTime @default(now())
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  conversions Int      @default(0)
+  spend       Float    @default(0)
+  revenue     Float    @default(0)
+  roi         Float?
+  channel     String?
+  country     String?
+  createdAt   DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaign Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([campaignId])
+}
+
+model AIConversation {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String?
+  messages  String   @default("[]")
+  context   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model CommunityPost {
+  id          String    @id @default(uuid())
+  userId      String
+  title       String
+  content     String
+  category    String
+  tags        String[]
+  likes       Int       @default(0)
+  views       Int       @default(0)
+  isPublished Boolean   @default(true)
+  imageUrl    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments Comment[]
+
+  @@index([userId])
+}
+
+model Comment {
+  id        String        @id @default(uuid())
+  postId    String
+  userId    String
+  content   String
+  likes     Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+model Event {
+  id           String   @id @default(uuid())
+  organizerId  String
+  title        String
+  description  String
+  type         String   @default("WEBINAR")
+  startDate    DateTime
+  endDate      DateTime
+  location     String?
+  maxAttendees Int?
+  isOnline     Boolean  @default(false)
+  meetingLink  String?
+  imageUrl     String?
+  tags         String[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  organizer User @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
+
+  @@index([organizerId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  data      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Resource {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  description String
+  type        String   @default("GUIDE")
+  fileUrl     String?
+  downloads   Int      @default(0)
+  tags        String[]
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Automation {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  trigger     String   // JSON: { type: string, conditions: object }
+  actions     String   // JSON array: [{ type: string, config: object, delay?: number }]
+  stats       String   @default("{\"runs\":0,\"lastRun\":null}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Workspace {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  logoUrl     String?
+  ownerId     String
+  plan        String   @default("FREE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner   User              @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  members WorkspaceMember[]
+  contacts Contact[]
+  leads    Lead[]
+  deals    Deal[]
+  pipelines Pipeline[]
+
+  @@index([ownerId])
+  @@index([slug])
+}
+
+model WorkspaceMember {
+  id          String   @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        String   @default("MEMBER") // OWNER, ADMIN, MEMBER, VIEWER
+  invitedAt   DateTime @default(now())
+  joinedAt    DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model Plan {
+  id            String   @id @default(uuid())
+  name          String   @unique // FREE, PRO, AGENCY, ENTERPRISE
+  displayName   String
+  price         Float    @default(0)
+  currency      String   @default("USD")
+  interval      String   @default("month") // month, year
+  features      String   @default("[]") // JSON array of feature keys
+  limits        String   @default("{}") // JSON object: { campaigns: 5, contacts: 500, ... }
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                   String    @id @default(uuid())
+  userId               String    @unique
+  planId               String
+  status               String    @default("ACTIVE") // ACTIVE, CANCELLED, PAST_DUE, TRIALING
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean   @default(false)
+  trialEnd             DateTime?
+  paystackSubCode      String?
+  paystackCustomerCode String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Contact {
+  id          String   @id @default(uuid())
+  workspaceId String
+  userId      String
+  firstName   String
+  lastName    String?
+  email       String?
+  phone       String?
+  company     String?
+  jobTitle    String?
+  country     String?
+  city        String?
+  tags        String[]
+  source      String?  // website, referral, manual, import, etc.
+  score       Int      @default(0)
+  avatar      String?
+  notes       String?
+  customFields String  @default("{}") // JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id])
+  leads     Lead[]
+  activities Activity[]
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([email])
+}
+
+model Pipeline {
+  id          String   @id @default(uuid())
+  workspaceId String
+  userId      String
+  name        String
+  stages      String   @default("[]") // JSON array of stage names
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+  deals     Deal[]
+
+  @@index([workspaceId])
+}
+
+model Lead {
+  id          String   @id @default(uuid())
+  workspaceId String
+  contactId   String?
+  userId      String
+  name        String
+  email       String?
+  phone       String?
+  company     String?
+  source      String?
+  status      String   @default("NEW") // NEW, CONTACTED, QUALIFIED, CONVERTED, LOST
+  score       Int      @default(0)
+  value       Float?
+  notes       String?
+  tags        String[]
+  assignedTo  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  contact   Contact?   @relation(fields: [contactId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
+  activities Activity[]
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([status])
+}
+
+model Deal {
+  id          String   @id @default(uuid())
+  workspaceId String
+  pipelineId  String
+  userId      String
+  title       String
+  value       Float    @default(0)
+  currency    String   @default("USD")
+  stage       String
+  probability Int      @default(0) // 0-100
+  closeDate   DateTime?
+  contactName String?
+  contactEmail String?
+  notes       String?
+  tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace  Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  pipeline   Pipeline   @relation(fields: [pipelineId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+  activities Activity[]
+
+  @@index([workspaceId])
+  @@index([pipelineId])
+  @@index([stage])
+}
+
+model Activity {
+  id         String    @id @default(uuid())
+  userId     String
+  contactId  String?
+  leadId     String?
+  dealId     String?
+  type       String    // NOTE, CALL, EMAIL, MEETING, TASK, FOLLOW_UP
+  title      String
+  body       String?
+  dueAt      DateTime?
+  doneAt     DateTime?
+  isDone     Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id])
+  contact Contact? @relation(fields: [contactId], references: [id])
+  lead    Lead?    @relation(fields: [leadId], references: [id])
+  deal    Deal?    @relation(fields: [dealId], references: [id])
+
+  @@index([userId])
+  @@index([contactId])
+  @@index([leadId])
+  @@index([dealId])
+}
+
+model Funnel {
+  id          String             @id @default(uuid())
+  workspaceId String
+  name        String
+  slug        String             @unique
+  description String?
+  status      String             @default("DRAFT")
+  pages       FunnelPage[]
+  submissions FunnelSubmission[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model FunnelPage {
+  id        String   @id @default(uuid())
+  funnelId  String
+  funnel    Funnel   @relation(fields: [funnelId], references: [id], onDelete: Cascade)
+  name      String
+  order     Int
+  blocks    Json     @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FunnelSubmission {
+  id        String   @id @default(uuid())
+  funnelId  String
+  funnel    Funnel   @relation(fields: [funnelId], references: [id], onDelete: Cascade)
+  pageId    String?
+  data      Json
+  contactId String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model Chatbot {
+  id           String        @id @default(uuid())
+  workspaceId  String
+  name         String
+  persona      String        @default("friendly and helpful assistant")
+  greeting     String        @default("Hi! How can I help you today?")
+  systemPrompt String
+  primaryColor String        @default("#6366f1")
+  isActive     Boolean       @default(true)
+  sessions     ChatSession[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model ChatSession {
+  id        String   @id @default(uuid())
+  chatbotId String
+  chatbot   Chatbot  @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+  visitorId String
+  messages  Json     @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([chatbotId])
+}
+
+// ─── Social Listening ────────────────────────────────────────────────────
+
+model SocialKeyword {
+  id          String   @id @default(uuid())
+  workspaceId String
+  keyword     String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  @@index([workspaceId])
+}
+
+model SocialMention {
+  id          String   @id @default(uuid())
+  workspaceId String
+  keyword     String
+  platform    String
+  content     String
+  author      String?
+  url         String?
+  sentiment   String   @default("NEUTRAL")
+  score       Float    @default(0)
+  publishedAt DateTime
+  createdAt   DateTime @default(now())
+  @@index([workspaceId])
+}
+
+// ─── AI Ad Creative ──────────────────────────────────────────────────────
+
+model AdCreative {
+  id             String   @id @default(uuid())
+  workspaceId    String
+  name           String
+  platform       String
+  productName    String
+  targetAudience String?
+  tone           String   @default("professional")
+  variations     Json     @default("[]")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@index([workspaceId])
+}
+
+// ─── E-Commerce ──────────────────────────────────────────────────────────
+
+model Product {
+  id          String      @id @default(uuid())
+  workspaceId String
+  name        String
+  description String?
+  price       Float
+  currency    String      @default("USD")
+  sku         String?
+  inventory   Int         @default(0)
+  images      String[]
+  category    String?
+  isActive    Boolean     @default(true)
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  @@index([workspaceId])
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  workspaceId   String
+  customerName  String
+  customerEmail String
+  status        String      @default("PENDING")
+  total         Float
+  currency      String      @default("USD")
+  items         OrderItem[]
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  @@index([workspaceId])
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+}
+
+// ─── Course Hub ──────────────────────────────────────────────────────────
+
+model Course {
+  id          String       @id @default(uuid())
+  workspaceId String
+  title       String
+  description String?
+  thumbnail   String?
+  price       Float        @default(0)
+  category    String?
+  isPublished Boolean      @default(false)
+  lessons     Lesson[]
+  enrollments Enrollment[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  @@index([workspaceId])
+}
+
+model Lesson {
+  id        String   @id @default(uuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title     String
+  content   String?
+  videoUrl  String?
+  order     Int
+  duration  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Enrollment {
+  id          String    @id @default(uuid())
+  courseId    String
+  course      Course    @relation(fields: [courseId], references: [id])
+  userId      String
+  progress    Float     @default(0)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  @@unique([courseId, userId])
+}
+
+// ─── Affiliate System ────────────────────────────────────────────────────
+
+model AffiliateProgram {
+  id             String      @id @default(uuid())
+  workspaceId    String
+  name           String
+  commissionRate Float       @default(10)
+  cookieDays     Int         @default(30)
+  isActive       Boolean     @default(true)
+  affiliates     Affiliate[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  @@index([workspaceId])
+}
+
+model Affiliate {
+  id          String           @id @default(uuid())
+  programId   String
+  program     AffiliateProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  name        String
+  email       String
+  code        String           @unique
+  clicks      Int              @default(0)
+  conversions Int              @default(0)
+  earnings    Float            @default(0)
+  status      String           @default("ACTIVE")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+// ─── Influencer Marketplace ──────────────────────────────────────────────
+
+model Influencer {
+  id             String              @id @default(uuid())
+  name           String
+  handle         String
+  platform       String
+  country        String
+  category       String
+  followers      Int
+  engagementRate Float
+  pricePerPost   Float?
+  bio            String?
+  avatar         String?
+  isVerified     Boolean             @default(false)
+  requests       InfluencerRequest[]
+  createdAt      DateTime            @default(now())
+}
+
+model InfluencerRequest {
+  id           String     @id @default(uuid())
+  workspaceId  String
+  influencerId String
+  influencer   Influencer @relation(fields: [influencerId], references: [id])
+  campaignName String
+  message      String
+  budget       Float?
+  status       String     @default("PENDING")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  @@index([workspaceId])
+}

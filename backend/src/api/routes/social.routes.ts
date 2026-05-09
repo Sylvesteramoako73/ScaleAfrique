@@ -1,0 +1,12 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth';
+import { socialController } from '../controllers/social.controller';
+const r = Router();
+r.use(requireAuth);
+r.get('/keywords', socialController.getKeywords);
+r.post('/keywords', socialController.addKeyword);
+r.delete('/keywords/:id', socialController.removeKeyword);
+r.get('/mentions', socialController.getMentions);
+r.get('/stats', socialController.getStats);
+r.post('/refresh', socialController.refresh);
+export default r;

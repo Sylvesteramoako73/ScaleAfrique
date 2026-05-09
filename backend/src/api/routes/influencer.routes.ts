@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth';
+import { influencerController } from '../controllers/influencer.controller';
+const r = Router();
+r.use(requireAuth);
+r.get('/', influencerController.list);
+r.get('/requests', influencerController.listRequests);
+r.post('/requests', influencerController.createRequest);
+r.patch('/requests/:id', influencerController.updateRequestStatus);
+export default r;
