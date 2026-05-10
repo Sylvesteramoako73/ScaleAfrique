@@ -1,2 +1,2 @@
-import { Analytics } from '@/pages/Analytics';
+import { Analytics } from '@/views/Analytics';
 export default function AnalyticsPage() { return <Analytics />; }

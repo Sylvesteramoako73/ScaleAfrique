@@ -1,2 +1,2 @@
-import { AppMarketplace } from '@/pages/AppMarketplace';
+import { AppMarketplace } from '@/views/AppMarketplace';
 export default function MarketplacePage() { return <AppMarketplace />; }

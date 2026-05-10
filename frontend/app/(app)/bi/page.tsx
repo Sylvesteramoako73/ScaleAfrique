@@ -1,2 +1,2 @@
-import { BIEngine } from '@/pages/BIEngine';
+import { BIEngine } from '@/views/BIEngine';
 export default function BIPage() { return <BIEngine />; }

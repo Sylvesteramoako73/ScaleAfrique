@@ -1,2 +1,2 @@
-import { Automations } from '@/pages/Automations';
+import { Automations } from '@/views/Automations';
 export default function AutomationsPage() { return <Automations />; }

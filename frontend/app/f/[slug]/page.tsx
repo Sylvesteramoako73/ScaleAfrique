@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { api } from '@/services/api';
-import { BlockRenderer } from '@/pages/FunnelBuilder';
+import { BlockRenderer } from '@/views/FunnelBuilder';
 import type { Funnel, Block } from '@/services/funnel.service';
 
 export default function PublicFunnelPage() {

@@ -1,2 +1,2 @@
-import { AdCreative } from '@/pages/AdCreative';
+import { AdCreative } from '@/views/AdCreative';
 export default function AdCreativePage() { return <AdCreative />; }

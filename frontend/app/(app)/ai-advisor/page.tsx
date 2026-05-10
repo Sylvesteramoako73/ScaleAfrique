@@ -1,2 +1,2 @@
-import { AIAdvisor } from '@/pages/AIAdvisor';
+import { AIAdvisor } from '@/views/AIAdvisor';
 export default function AIAdvisorPage() { return <AIAdvisor />; }
