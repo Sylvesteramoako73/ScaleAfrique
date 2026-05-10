@@ -58,7 +58,7 @@ model StartupProfile {
   website        String?
   description    String?
   teamSize       Int?
-  monthlyBudget  Float?
+  monthlyBudget  String?
   targetAudience String?
   languages      String[]
   logoUrl        String?

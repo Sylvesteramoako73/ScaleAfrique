@@ -48,7 +48,8 @@ export const onboardingSchema = z.object({
   website: z.string().url().optional().or(z.literal('')),
   description: z.string().optional(),
   teamSize: z.number().int().positive().optional(),
-  monthlyBudget: z.number().positive().optional(),
+  monthlyBudget: z.string().optional(),
+  channels: z.array(z.string()).optional(),
   targetAudience: z.string().optional(),
   languages: z.array(z.string()).optional(),
 });

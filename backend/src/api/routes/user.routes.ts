@@ -38,7 +38,8 @@ router.put('/me', requireAuth, async (req, res, next) => {
 async function upsertProfile(req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) {
   try {
     const raw = onboardingSchema.parse(req.body);
-    const data = { ...raw, languages: raw.languages ?? [] };
+    const { channels: _channels, ...rest } = raw;
+    const data = { ...rest, languages: rest.languages ?? [] };
     const profile = await prisma.startupProfile.upsert({
       where: { userId: req.user!.id },
       update: data,
